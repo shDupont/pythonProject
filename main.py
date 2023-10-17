@@ -1,133 +1,6 @@
-class Cliente:
-    def __init__(self, nome, data_nascimento, contato_telefone, email, endereco, cpf):
-        self.nome = nome
-        self.data_nascimento = data_nascimento
-        self.contato_telefone = contato_telefone
-        self.email = email
-        self.endereco = endereco
-        self.cpf = cpf
-
-    def __str__(self):
-        return f"Nome: {self.nome}, CPF: {self.cpf}"
-
-class Node:
-    def __init__(self, cliente):
-        self.cliente = cliente
-        self.left = None
-        self.right = None
-        self.height = 1
-
-class AVLTree:
-    def __init__(self):
-        self.root = None
-
-    def _height(self, node):
-        if not node:
-            return 0
-        return node.height
-
-    def _balance_factor(self, node):
-        if not node:
-            return 0
-        return self._height(node.left) - self._height(node.right)
-
-    def _update_height(self, node):
-        if not node:
-            return
-        node.height = 1 + max(self._height(node.left), self._height(node.right))
-
-    def _rotate_left(self, z):
-        y = z.right
-        T2 = y.left
-
-        y.left = z
-        z.right = T2
-
-        self._update_height(z)
-        self._update_height(y)
-
-        return y
-
-    def _rotate_right(self, y):
-        x = y.left
-        T2 = x.right
-
-        x.right = y
-        y.left = T2
-
-        self._update_height(y)
-        self._update_height(x)
-
-        return x
-
-    def insert(self, cliente):
-        self.root = self._insert(self.root, cliente)
-
-    def _insert(self, node, cliente):
-        if not node:
-            return Node(cliente)
-
-        if cliente.cpf < node.cliente.cpf:
-            node.left = self._insert(node.left, cliente)
-        elif cliente.cpf > node.cliente.cpf:
-            node.right = self._insert(node.right, cliente)
-        else:
-
-            return node
-
-        self._update_height(node)
-
-        balance = self._balance_factor(node)
-
-
-        if balance > 1:
-            if cliente.cpf < node.left.cliente.cpf:
-                return self._rotate_right(node)
-            else:
-                node.left = self._rotate_left(node.left)
-                return self._rotate_right(node)
-        if balance < -1:
-            if cliente.cpf > node.right.cliente.cpf:
-                return self._rotate_left(node)
-            else:
-                node.right = self._rotate_right(node.right)
-                return self._rotate_left(node)
-
-        return node
-
-    def search(self, cpf):
-        result, comparacoes = self._search(self.root, cpf)
-        if result:
-            return result.cliente, comparacoes
-        else:
-            return None, comparacoes
-
-    def _search(self, node, cpf, comparacoes=[]):
-        if not node:
-            return None, comparacoes
-
-        comparacoes.append(node.cliente.cpf)
-
-        if cpf == node.cliente.cpf:
-            return node, comparacoes
-        elif cpf < node.cliente.cpf:
-            return self._search(node.left, cpf, comparacoes=comparacoes)
-        else:
-            return self._search(node.right, cpf, comparacoes=comparacoes)
-
-    def inorder_traversal(self):
-        result = []
-        self._inorder_traversal(self.root, result)
-        return sorted(result, key=lambda cliente: cliente.nome)
-
-    def _inorder_traversal(self, node, result):
-        if not node:
-            return
-        self._inorder_traversal(node.left, result)
-        result.append(node.cliente)
-        self._inorder_traversal(node.right, result)
-
-
+from cliente import Cliente
+from AVL_tree import AVLTree
+from merge_sort import merge
 
 if __name__ == "__main__":
     tree = AVLTree()
@@ -173,18 +46,28 @@ if __name__ == "__main__":
 
     ]
 
-
+    print("Todos os clientes cadastrados:")
     for i, cliente in enumerate(clientes, start=1):
-        print(f"Cliente {i}:")
+        print(f"\nCliente {i}:")
         print(cliente)
         tree.insert(cliente)
 
-    print("\nLista de clientes em ordem alfabética:")
-    clientes_ordem_alfabetica = tree.inorder_traversal()
-    for cliente in clientes_ordem_alfabetica:
-        print(cliente)
+    print("\n===============================================================\n")
+    print("Fatores de balanceamento da árvore:")
+    all_balance_factor = tree.get_all_balance_factors()
+    for balance_factor in all_balance_factor:
+        print(f"{balance_factor}\n")
 
-    print("\nBusca por CPF '22222222222':")
+    print("\n===============================================================\n")
+    print("Clientes em ordem alfabética:")
+    tree_arr = tree.inorder_traversal()
+    merge(tree_arr, 0, len(tree_arr) - 1)
+    for element in tree_arr:
+        print(f"{element}\n")
+
+    print("\n===============================================================\n")
+    print("Buscando Clientes por CPF:")
+    print("\nCPF '22222222222':")
     cpf_busca = "22222222222"
     resultado_busca, comparacoes = tree.search(cpf_busca)
     if resultado_busca is not None:
@@ -197,7 +80,7 @@ if __name__ == "__main__":
     else:
         print(f"\nCliente com CPF {cpf_busca} não encontrado.")
 
-    print("\nBusca por CPF '10101010101':")
+    print("\nCPF '10101010101':")
     cpf_busca = "10101010101"
     resultado_busca, comparacoes = tree.search(cpf_busca)
     if resultado_busca is not None:
@@ -210,15 +93,31 @@ if __name__ == "__main__":
     else:
         print(f"\nCliente com CPF {cpf_busca} não encontrado.")
 
-    print("\nBusca por email 'maria@yahoo.com':")
-    email_busca = "maria@yahoo.com"
-    encontrado_pelo_email = None
-    for cliente in clientes:
+    print("\nCPF '99999999999':")
+    cpf_busca = "99999999999"
+    resultado_busca, comparacoes = tree.search(cpf_busca)
+    if resultado_busca is not None:
+        encontrado = resultado_busca
+        print(f"\nCliente encontrado: {encontrado.nome}")
+        print(f"Comparação necessária para encontrar: {len(comparacoes)}")
+        print("Comparações feitas durante a busca:")
+        for i, cpf_comparacao in enumerate(comparacoes):
+            print(f"Comparação {i + 1}: {cpf_comparacao}")
+    else:
+        print(f"\nCliente com CPF {cpf_busca} não encontrado.")
+
+    print("\n===============================================================\n")
+    print("Buscando Clientes por email")
+    print("\nEmail 'rafael@gmail.com':")
+    email_busca = "rafael@gmail.com"
+    encontrado_pelo_email = {"cliente": None, "index": None}
+    for i, cliente in enumerate(clientes, start=0):
         if cliente.email == email_busca:
-            encontrado_pelo_email = cliente
+            encontrado_pelo_email["cliente"] = cliente
+            encontrado_pelo_email["index"] = i
             break
 
     if encontrado_pelo_email is not None:
-        print(f"\nCliente encontrado pelo email: {encontrado_pelo_email.nome}")
+        print(f"\nCliente encontrado: {encontrado_pelo_email['cliente'].nome} (index: {encontrado_pelo_email['index']})")
     else:
         print(f"\nCliente com email {email_busca} não encontrado.")
